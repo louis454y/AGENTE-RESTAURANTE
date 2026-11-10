@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: agente-restaurante
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ACCESS_CODE
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: MAX_MENSAJES_DIA
+        value: "400"

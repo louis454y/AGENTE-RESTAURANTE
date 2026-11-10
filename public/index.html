@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#B8321F">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Recepcionista virtual</title>
+<style>
+  :root {
+    --papel: #FAF7F2; --tinta: #22201C; --aji: #B8321F; --aji-osc: #8F2314;
+    --maiz: #E9B949; --suave: #ECE6DB; --borde: #D9D1C3; --gris: #6B6558; --ok: #2F6B3F;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: "Segoe UI", Roboto, system-ui, sans-serif; background: var(--papel); color: var(--tinta);
+         display: flex; flex-direction: column; }
+  header { padding: 14px 20px 0; border-bottom: 1px solid var(--borde); }
+  .titulo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; }
+  header .sub { color: var(--gris); font-size: .9rem; }
+  nav { display: flex; gap: 4px; margin-top: 10px; }
+  nav button { background: none; color: var(--gris); border-radius: 8px 8px 0 0; padding: 10px 16px; font-size: .98rem;
+               border-bottom: 3px solid transparent; }
+  nav button.on { color: var(--tinta); border-bottom-color: var(--aji); font-weight: 600; }
+  section { display: none; flex: 1; min-height: 0; padding: 16px 20px; }
+  section.on { display: flex; flex-direction: column; }
+  #log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 75ch; padding: 10px 14px; border-radius: 12px; line-height: 1.45; width: fit-content; }
+  .msg.user { align-self: flex-end; background: var(--aji); color: #fff; border-bottom-right-radius: 3px; }
+  .msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--borde); border-bottom-left-radius: 3px; }
+  .msg.err { align-self: center; background: #FFF1EE; border: 1px solid #E8B4AA; color: var(--aji-osc); font-size: .92rem; }
+  .vacio { margin: auto; color: var(--gris); text-align: center; max-width: 36ch; line-height: 1.5; }
+  .estado { display: flex; justify-content: space-between; min-height: 1.6em; font-size: .9rem; color: var(--gris); padding: 8px 0; }
+  .barra { display: flex; gap: 8px; }
+  input[type=text], input[type=password] { flex: 1; min-width: 0; padding: 12px 14px; border: 1px solid var(--borde);
+        border-radius: 10px; font-size: 1rem; background: #fff; color: var(--tinta); }
+  button { border: 0; border-radius: 10px; padding: 12px 18px; font-size: 1rem; cursor: pointer; background: var(--tinta); color: #fff; }
+  button.llamar { background: var(--aji); }
+  button.llamar.activa { background: var(--tinta); }
+  button.suave { background: var(--suave); color: var(--tinta); }
+  :focus-visible { outline: 3px solid var(--maiz); outline-offset: 2px; }
+  .scroll { overflow-y: auto; flex: 1; }
+  .cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .cifra { background: var(--suave); border-radius: 10px; padding: 12px 14px; }
+  .cifra b { display: block; font-size: 1.6rem; font-family: Georgia, serif; }
+  .cifra span { color: var(--gris); font-size: .88rem; }
+  details, .tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+  summary { cursor: pointer; line-height: 1.45; }
+  summary .meta { color: var(--gris); font-size: .88rem; display: block; }
+  .etiqueta { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: .8rem; margin-right: 6px; background: var(--suave); }
+  .etiqueta.ok { background: #DDEBDD; color: var(--ok); }
+  .etiqueta.alerta { background: #FBDDD6; color: var(--aji-osc); }
+  .dialogo { margin-top: 10px; border-top: 1px solid var(--borde); padding-top: 8px; font-size: .93rem; line-height: 1.5; }
+  .dialogo p { margin: 4px 0; }
+  .total { float: right; font-weight: 600; }
+  .nota { color: var(--gris); font-size: .9rem; line-height: 1.45; }
+  #acceso { position: fixed; inset: 0; background: var(--papel); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+  #acceso.on { display: flex; }
+  #acceso form { width: min(380px, 100%); display: flex; flex-direction: column; gap: 12px; }
+  #acceso h2 { margin: 0; font-family: Georgia, serif; }
+  #errAcceso { color: var(--aji-osc); min-height: 1.3em; font-size: .92rem; }
+  @media (max-width: 600px) { nav button { padding: 10px 11px; font-size: .92rem; } }
+</style>
+</head>
+<body>
+
+<div id="acceso">
+  <form id="formAcceso">
+    <h2>Acceso</h2>
+    <p class="nota">Escriba el código de acceso para usar la recepcionista virtual.</p>
+    <input type="password" id="codigo" placeholder="Código de acceso" autocomplete="current-password">
+    <div id="errAcceso" role="alert"></div>
+    <button type="submit" class="llamar">Entrar</button>
+  </form>
+</div>
+
+<header>
+  <div class="titulo"><h1 id="nombre">Recepcionista virtual</h1><span class="sub">Atención telefónica con IA</span></div>
+  <nav id="tabs">
+    <button data-tab="llamada" class="on">Llamada</button>
+    <button data-tab="historial">Historial</button>
+    <button data-tab="pedidos">Pedidos</button>
+    <button data-tab="reservas">Reservas</button>
+  </nav>
+</header>
+
+<section id="t-llamada" class="on">
+  <div id="log" aria-live="polite">
+    <p class="vacio" id="vacio">Pulse «Iniciar llamada» y hable como si fuera un cliente. También puede escribir abajo.</p>
+  </div>
+  <div class="estado"><span id="estado"></span><span id="reloj"></span></div>
+  <div class="barra">
+    <button id="btnLlamar" class="llamar">Iniciar llamada</button>
+    <input type="text" id="texto" placeholder="Escriba un mensaje" autocomplete="off">
+    <button id="btnEnviar" class="suave">Enviar</button>
+  </div>
+</section>
+
+<section id="t-historial">
+  <div class="scroll">
+    <div class="cifras" id="cifras"></div>
+    <div id="listaLlamadas"></div>
+  </div>
+</section>
+
+<section id="t-pedidos">
+  <div class="scroll"><div id="listaPedidos"></div></div>
+</section>
+
+<section id="t-reservas">
+  <div class="scroll">
+    <div id="listaReservas"></div>
+    <p class="nota"><button class="suave" id="btnReset">Borrar datos de la demo</button></p>
+  </div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let codigo = localStorage.getItem('codigoAcceso') || '';
+let historial = [];
+let enLlamada = false;
+let reconocedor = null;
+let saludo = '';
+let inicioLlamada = null;
+let reservaEnLlamada = false;
+let pedidoEnLlamada = false;
+let temporizador = null;
+
+/* ---------- Conexión con el servidor ---------- */
+async function api(ruta, opciones = {}) {
+  const r = await fetch(ruta, {
+    ...opciones,
+    headers: { 'Content-Type': 'application/json', 'x-access-code': codigo, ...(opciones.headers || {}) }
+  });
+  if (r.status === 401) { pedirCodigo(); throw new Error('Código de acceso incorrecto.'); }
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Error desconocido');
+  return d;
+}
+function pedirCodigo() { $('acceso').classList.add('on'); $('codigo').focus(); }
+
+$('formAcceso').onsubmit = async e => {
+  e.preventDefault();
+  codigo = $('codigo').value.trim();
+  try {
+    await api('/api/login', { method: 'POST', body: '{}' });
+    localStorage.setItem('codigoAcceso', codigo);
+    $('acceso').classList.remove('on');
+    $('errAcceso').textContent = '';
+    refrescar();
+  } catch { $('errAcceso').textContent = 'Código incorrecto. Inténtelo de nuevo.'; }
+};
+
+/* ---------- Pestañas ---------- */
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === 't-' + b.dataset.tab));
+  if (b.dataset.tab !== 'llamada') refrescar();
+});
+
+/* ---------- Conversación ---------- */
+function agregar(clase, texto) {
+  const v = $('vacio'); if (v) v.remove();
+  const d = document.createElement('div');
+  d.className = 'msg ' + clase;
+  d.textContent = texto;
+  $('log').appendChild(d);
+  $('log').scrollTop = $('log').scrollHeight;
+}
+
+function hablar(texto, alTerminar) {
+  if (!('speechSynthesis' in window)) { alTerminar && alTerminar(); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(texto);
+  u.lang = 'es-CO';
+  const voces = speechSynthesis.getVoices();
+  const voz = voces.find(v => v.lang === 'es-CO') || voces.find(v => v.lang === 'es-MX')
+    || voces.find(v => v.lang === 'es-US') || voces.find(v => v.lang.startsWith('es'));
+  if (voz) u.voice = voz;
+  u.onend = u.onerror = () => alTerminar && alTerminar();
+  $('estado').textContent = 'El agente está hablando…';
+  speechSynthesis.speak(u);
+}
+
+function escuchar() {
+  if (!enLlamada) return;
+  reconocedor = new SR();
+  reconocedor.lang = 'es-CO';
+  reconocedor.interimResults = false;
+  reconocedor.continuous = false;
+  reconocedor.onresult = e => { const t = e.results[0][0].transcript.trim(); if (t) enviar(t); };
+  reconocedor.onerror = e => {
+    if (!enLlamada) return;
+    if (e.error === 'no-speech' || e.error === 'aborted') { setTimeout(escuchar, 300); return; }
+    agregar('err', 'Problema con el micrófono (' + e.error + '). Revise el permiso del navegador.');
+    colgar();
+  };
+  $('estado').textContent = 'Escuchando… hable ahora';
+  try { reconocedor.start(); } catch { setTimeout(escuchar, 400); }
+}
+
+async function enviar(texto) {
+  if (!inicioLlamada) { iniciarRegistro(); actualizarBoton(); }
+  agregar('user', texto);
+  historial.push({ role: 'user', text: texto });
+  $('estado').textContent = 'Pensando…';
+  try {
+    const d = await api('/api/chat', { method: 'POST', body: JSON.stringify({ messages: historial }) });
+    historial.push({ role: 'model', text: d.reply });
+    agregar('bot', d.reply);
+    if (d.reserva) reservaEnLlamada = true;
+    if (d.pedido) pedidoEnLlamada = true;
+    if (enLlamada) hablar(d.reply, escuchar); else $('estado').textContent = '';
+  } catch (e) {
+    agregar('err', e.message);
+    $('estado').textContent = '';
+    if (enLlamada) colgar();
+  }
+}
+
+/* ---------- Llamada ---------- */
+function iniciarRegistro() {
+  inicioLlamada = new Date();
+  reservaEnLlamada = false;
+  pedidoEnLlamada = false;
+  clearInterval(temporizador);
+  temporizador = setInterval(() => { $('reloj').textContent = mmss((Date.now() - inicioLlamada) / 1000); }, 1000);
+}
+const mmss = s => { s = Math.round(s); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+function actualizarBoton() {
+  const b = $('btnLlamar');
+  if (enLlamada) { b.textContent = 'Colgar'; b.classList.add('activa'); }
+  else if (inicioLlamada) { b.textContent = 'Terminar y guardar'; b.classList.add('activa'); }
+  else { b.textContent = 'Iniciar llamada'; b.classList.remove('activa'); }
+}
+
+function iniciarLlamada() {
+  if (!SR) { agregar('err', 'Este navegador no reconoce voz. Abra esta página en Google Chrome.'); return; }
+  historial = [];
+  enLlamada = true;
+  iniciarRegistro();
+  actualizarBoton();
+  agregar('bot', saludo);
+  hablar(saludo, escuchar);
+}
+
+async function colgar() {
+  const eraLlamada = enLlamada;
+  enLlamada = false;
+  if (reconocedor) { try { reconocedor.abort(); } catch {} }
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  await guardarLlamada(eraLlamada);
+  actualizarBoton();
+}
+
+async function guardarLlamada() {
+  clearInterval(temporizador);
+  if (!inicioLlamada) return;
+  const segundos = (Date.now() - inicioLlamada) / 1000;
+  const datos = { inicio: inicioLlamada.toISOString(), segundos, transcript: historial, reservaCreada: reservaEnLlamada, pedidoCreado: pedidoEnLlamada };
+  inicioLlamada = null;
+  $('reloj').textContent = '';
+  if (!datos.transcript.some(t => t.role === 'user')) { $('estado').textContent = 'Llamada terminada.'; return; }
+  $('estado').textContent = 'Guardando resumen de la llamada…';
+  try {
+    await api('/api/llamadas', { method: 'POST', body: JSON.stringify(datos) });
+    $('estado').textContent = 'Llamada terminada y guardada en el historial.';
+  } catch (e) { $('estado').textContent = 'Llamada terminada, pero no se pudo guardar: ' + e.message; }
+  historial = [];
+}
+
+/* ---------- Historial y reservas ---------- */
+const fechaHora = iso => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' });
+const MOTIVOS = { reserva: 'Reserva', pedido: 'Pedido', menu: 'Menú', horario: 'Horario', ubicacion: 'Ubicación', queja: 'Queja', otro: 'Otro' };
+const RESULTADOS = { resuelta: ['Resuelta', 'ok'], reserva_creada: ['Reserva creada', 'ok'], pedido_creado: ['Pedido creado', 'ok'], requiere_humano: ['Requiere atención', 'alerta'] };
+
+function tarjetaCifra(valor, texto) {
+  const d = document.createElement('div'); d.className = 'cifra';
+  const b = document.createElement('b'); b.textContent = valor;
+  const s = document.createElement('span'); s.textContent = texto;
+  d.append(b, s); return d;
+}
+
+async function refrescar() {
+  try {
+    const [llamadas, reservas, pedidos] = await Promise.all([api('/api/llamadas'), api('/api/reservas'), api('/api/pedidos')]);
+
+    const prom = llamadas.length ? llamadas.reduce((a, l) => a + l.segundos, 0) / llamadas.length : 0;
+    const atencion = llamadas.filter(l => l.resultado === 'requiere_humano').length;
+    const c = $('cifras'); c.innerHTML = '';
+    c.append(tarjetaCifra(llamadas.length, 'Llamadas atendidas'), tarjetaCifra(mmss(prom), 'Duración promedio'),
+             tarjetaCifra(pedidos.length, 'Domicilios tomados'), tarjetaCifra(reservas.length, 'Reservas tomadas'), tarjetaCifra(atencion, 'Requieren atención'));
+
+    const L = $('listaLlamadas'); L.innerHTML = '';
+    if (!llamadas.length) { const p = document.createElement('p'); p.className = 'nota'; p.textContent = 'Aún no hay llamadas. Haga una en la pestaña Llamada.'; L.appendChild(p); }
+    llamadas.slice().reverse().forEach(l => {
+      const det = document.createElement('details');
+      const sum = document.createElement('summary');
+      const [txt, cls] = RESULTADOS[l.resultado] || ['Resuelta', 'ok'];
+      const e1 = document.createElement('span'); e1.className = 'etiqueta'; e1.textContent = MOTIVOS[l.motivo] || 'Otro';
+      const e2 = document.createElement('span'); e2.className = 'etiqueta ' + cls; e2.textContent = txt;
+      const meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = fechaHora(l.inicio) + ' · duración ' + mmss(l.segundos);
+      sum.append(e1, e2, document.createTextNode(l.resumen), meta);
+      const dia = document.createElement('div'); dia.className = 'dialogo';
+      l.transcript.forEach(t => { const p = document.createElement('p'); p.textContent = (t.role === 'user' ? 'Cliente: ' : 'Agente: ') + t.text; dia.appendChild(p); });
+      det.append(sum, dia); L.appendChild(det);
+    });
+
+
+    const P = $('listaPedidos'); P.innerHTML = '';
+    if (!pedidos.length) { const p = document.createElement('p'); p.className = 'nota'; p.textContent = 'Aún no hay domicilios. Pida uno en una llamada de prueba.'; P.appendChild(p); }
+    const cop = n => '$' + Number(n).toLocaleString('es-CO');
+    const SIGUIENTE = { nuevo: 'preparando', preparando: 'en camino', 'en camino': 'entregado' };
+    pedidos.slice().reverse().forEach(x => {
+      const d = document.createElement('div'); d.className = 'tarjeta';
+      const tot = document.createElement('span'); tot.className = 'total'; tot.textContent = cop(x.total);
+      const b = document.createElement('b'); b.textContent = x.nombre;
+      d.append(tot, b, document.createElement('br'));
+      const est = document.createElement('span'); est.className = 'etiqueta ' + (x.estado === 'entregado' ? 'ok' : (x.estado === 'nuevo' ? 'alerta' : '')); est.textContent = x.estado;
+      d.append(est, document.createTextNode(fechaHora(x.creado)), document.createElement('br'));
+      x.items.forEach(i => { d.append(`${i.cantidad} × ${i.nombre}`, document.createElement('br')); });
+      d.append(`Subtotal ${cop(x.subtotal)} + domicilio ${cop(x.domicilio)}`, document.createElement('br'),
+               `Dirección: ${x.direccion}`, document.createElement('br'),
+               `Tel. ${x.telefono} · Pago: ${x.pago}`);
+      if (x.notas) d.append(document.createElement('br'), 'Notas: ' + x.notas);
+      if (x.revisar) { const w = document.createElement('div'); w.className = 'nota'; w.textContent = 'Revisar: algún plato no coincide con el menú.'; d.appendChild(w); }
+      if (SIGUIENTE[x.estado]) {
+        const bt = document.createElement('button'); bt.className = 'suave'; bt.style.marginTop = '8px';
+        bt.textContent = 'Marcar como: ' + SIGUIENTE[x.estado];
+        bt.onclick = async () => { try { await api('/api/pedidos/' + x.id + '/avanzar', { method: 'POST', body: '{}' }); refrescar(); } catch {} };
+        d.appendChild(bt);
+      }
+      P.appendChild(d);
+    });
+
+    const R = $('listaReservas'); R.innerHTML = '';
+    if (!reservas.length) { const p = document.createElement('p'); p.className = 'nota'; p.textContent = 'Aún no hay reservas. Pida una reserva en una llamada de prueba.'; R.appendChild(p); }
+    reservas.slice().reverse().forEach(x => {
+      const d = document.createElement('div'); d.className = 'tarjeta';
+      const b = document.createElement('b'); b.textContent = x.nombre;
+      d.appendChild(b);
+      d.append(document.createElement('br'), `${x.fecha} a las ${x.hora}`, document.createElement('br'),
+               `${x.personas} personas · Tel. ${x.telefono}`);
+      R.appendChild(d);
+    });
+  } catch {}
+}
+
+/* ---------- Eventos ---------- */
+$('btnLlamar').onclick = async () => {
+  if (enLlamada) return colgar();
+  if (inicioLlamada) { await guardarLlamada(); actualizarBoton(); return; }
+  iniciarLlamada();
+};
+$('btnEnviar').onclick = () => { const t = $('texto').value.trim(); if (t) { $('texto').value = ''; enviar(t); } };
+$('texto').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnEnviar').click(); });
+$('btnReset').onclick = async () => {
+  if (!confirm('¿Borrar todas las llamadas, pedidos y reservas de la demo?')) return;
+  try { await api('/api/reset', { method: 'POST', body: '{}' }); refrescar(); } catch {}
+};
+
+(async () => {
+  try {
+    const info = await (await fetch('/api/info')).json();
+    $('nombre').textContent = info.nombre;
+    document.title = info.nombre + ' · Recepcionista virtual';
+    saludo = info.saludo;
+    if (info.protegido) {
+      try { await api('/api/login', { method: 'POST', body: '{}' }); } catch { return; }
+    }
+  } catch {}
+  refrescar();
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+})();
+</script>
+</body>
+</html>

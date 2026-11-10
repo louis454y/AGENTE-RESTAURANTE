@@ -1,0 +1,119 @@
+{
+  "nombre": "Sabor Criollo",
+  "ciudad": "Puerto Colombia, Atlántico",
+  "direccion": "Dirección del restaurante (edítela en menu.json)",
+  "telefono": "+57 300 000 0000",
+  "horario": "Martes a jueves de 12:00 m. a 9:00 p. m.; viernes y sábado de 12:00 m. a 11:00 p. m.; domingo de 12:00 m. a 6:00 p. m.; lunes cerrado.",
+  "politicas": [
+    "Reservas para grupos de hasta 10 personas por este medio; más de 10 las confirma una persona del equipo.",
+    "La reserva se mantiene 15 minutos después de la hora acordada.",
+    "Aceptamos efectivo, tarjetas y transferencias (Nequi y Daviplata).",
+    "Hay parqueadero propio y opciones vegetarianas."
+  ],
+  "menu": [
+    {
+      "categoria": "Entradas",
+      "platos": [
+        {
+          "nombre": "Empanadas de pipián (3 unidades)",
+          "precio": 14000,
+          "descripcion": "Con ají de maní"
+        },
+        {
+          "nombre": "Patacones con hogao",
+          "precio": 16000,
+          "descripcion": "Plátano verde frito con hogao y queso costeño"
+        },
+        {
+          "nombre": "Arepa de choclo con queso",
+          "precio": 12000,
+          "descripcion": "Asada, con mantequilla"
+        }
+      ]
+    },
+    {
+      "categoria": "Platos fuertes",
+      "platos": [
+        {
+          "nombre": "Bandeja paisa",
+          "precio": 42000,
+          "descripcion": "Frijoles, arroz, chicharrón, carne molida, chorizo, huevo, arepa, plátano maduro y aguacate"
+        },
+        {
+          "nombre": "Sancocho de gallina",
+          "precio": 32000,
+          "descripcion": "Con arroz, aguacate y yuca"
+        },
+        {
+          "nombre": "Trucha a la plancha",
+          "precio": 38000,
+          "descripcion": "Con ensalada y papas criollas"
+        },
+        {
+          "nombre": "Ajiaco santafereño",
+          "precio": 34000,
+          "descripcion": "Con pollo, mazorca, alcaparras y crema de leche"
+        },
+        {
+          "nombre": "Plato vegetariano criollo",
+          "precio": 28000,
+          "descripcion": "Arroz, frijoles, plátano, ensalada y tortilla de huevo"
+        }
+      ]
+    },
+    {
+      "categoria": "Postres",
+      "platos": [
+        {
+          "nombre": "Postre de natas",
+          "precio": 11000,
+          "descripcion": ""
+        },
+        {
+          "nombre": "Brevas con arequipe y queso",
+          "precio": 13000,
+          "descripcion": ""
+        }
+      ]
+    },
+    {
+      "categoria": "Bebidas",
+      "platos": [
+        {
+          "nombre": "Jugo natural en agua o leche",
+          "precio": 9000,
+          "descripcion": "Lulo, mora, maracuyá o mango"
+        },
+        {
+          "nombre": "Limonada de coco",
+          "precio": 12000,
+          "descripcion": ""
+        },
+        {
+          "nombre": "Cerveza nacional",
+          "precio": 8000,
+          "descripcion": ""
+        },
+        {
+          "nombre": "Aguardiente (media botella)",
+          "precio": 65000,
+          "descripcion": ""
+        }
+      ]
+    }
+  ],
+  "domicilio": {
+    "disponible": true,
+    "zonas": [
+      "Puerto Colombia"
+    ],
+    "costo": 3000,
+    "tiempo": "entre 30 y 45 minutos",
+    "pagos": [
+      "efectivo",
+      "Nequi",
+      "Daviplata",
+      "tarjeta (datáfono al entregar)"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+AGENTE RECEPCIONISTA PARA RESTAURANTE  (versión 0.2)
+
+QUÉ INCLUYE
+- Simulador de llamadas con voz (Chrome en Android o PC).
+- Historial de llamadas: resumen, motivo, resultado, duración y conversación completa.
+- Panel de reservas y cifras (llamadas, duración promedio, reservas, casos que requieren atención).
+- Código de acceso para que nadie más use tu IA gratuita.
+- Límite diario de mensajes para cuidar tu cuota.
+- Se puede añadir a la pantalla de inicio del celular como una app.
+
+PROBARLO EN TU PC
+1. Abre esta carpeta en Visual Studio Code y abre la terminal.
+2. npm install
+3. Copia ".env.example" como ".env" y pega tu GEMINI_API_KEY y un ACCESS_CODE.
+4. npm start  y abre http://localhost:3000 en Chrome.
+
+CAMBIAR EL RESTAURANTE
+Edita "menu.json" (nombre, horario, platos, precios).
+
+SUBIRLO A INTERNET
+Mira la guía paso a paso que te di en el chat (GitHub y Render).
+En Render NO subas el archivo .env: las claves se escriben en el panel de Render (Environment).

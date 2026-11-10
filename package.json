@@ -1,0 +1,12 @@
+{
+  "name": "agente-restaurante",
+  "version": "0.2.0",
+  "description": "Recepcionista virtual con IA para restaurantes",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
